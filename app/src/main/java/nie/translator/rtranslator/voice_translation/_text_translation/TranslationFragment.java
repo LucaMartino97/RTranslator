@@ -2,6 +2,10 @@ package nie.translator.rtranslator.voice_translation._text_translation;
 
 import static android.content.Context.CLIPBOARD_SERVICE;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.content.ContextCompat;
+import nie.translator.rtranslator.voice_translation.VoiceTranslationService;
 import android.animation.Animator;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -206,7 +210,8 @@ public class TranslationFragment extends Fragment {
         walkieTalkieButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                activity.setFragment(VoiceTranslationActivity.WALKIE_TALKIE_FRAGMENT);
+                if (ContextCompat.checkSelfPermission(activity, Manifest.permission.RECORD_AUDIO)!= PackageManager.PERMISSION_GRANTED) requestPermissions(VoiceTranslationService.REQUIRED_PERMISSIONS, VoiceTranslationService.REQUEST_CODE_REQUIRED_PERMISSIONS);
+                else activity.setFragment(VoiceTranslationActivity.WALKIE_TALKIE_FRAGMENT);
             }
         });
         conversationButton.setOnClickListener(new View.OnClickListener() {
