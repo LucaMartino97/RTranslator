@@ -105,7 +105,7 @@ dependencies {
     implementation 'com.microsoft.onnxruntime:onnxruntime-android:1.19.0'  //latest.release
     implementation 'com.microsoft.onnxruntime:onnxruntime-extensions-android:0.12.4'   //latest.release
     //Ml-Kit
-    implementation 'com.google.mlkit:language-id:17.0.5'
+    //implementation 'com.google.mlkit:language-id:17.0.5'
     //JWS parser
     implementation group: 'com.nimbusds', name: 'nimbus-jose-jwt', version: '5.1'
     //Room library (database)

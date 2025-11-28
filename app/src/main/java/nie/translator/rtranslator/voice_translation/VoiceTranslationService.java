@@ -99,7 +99,7 @@ public abstract class VoiceTranslationService extends GeneralService {
     protected int utterancesCurrentlySpeaking = 0;
     protected final Object mLock = new Object();
     protected boolean isMicActivated = true;
-    protected boolean isMicAutomatic = true;
+    protected boolean isMicAutomatic = false;
     protected boolean manualRecognizingFirstLanguage = false;
     protected boolean manualRecognizingSecondLanguage = false;
     protected boolean manualRecognizingAutoLanguage = false;

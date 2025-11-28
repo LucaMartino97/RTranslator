@@ -26,12 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.collection.ArraySet;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.mlkit.nl.languageid.LanguageIdentification;
-import com.google.mlkit.nl.languageid.LanguageIdentificationOptions;
-import com.google.mlkit.nl.languageid.LanguageIdentifier;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
@@ -310,109 +304,11 @@ public class Translator extends NeuralNetworkApi {
     }
 
     public void detectLanguage(final NeuralNetworkApiResult result, boolean forceResult, final DetectLanguageListener responseListener) {
-        float confidenceThreshold = 0.5F;
-        if(forceResult){
-            confidenceThreshold = 0.01F;
-        }
-        LanguageIdentifier languageIdentifier = LanguageIdentification.getClient(new LanguageIdentificationOptions.Builder().setConfidenceThreshold(confidenceThreshold).build());
-        languageIdentifier.identifyLanguage(result.getText())
-                .addOnSuccessListener(
-                        new OnSuccessListener<String>() {
-                            @Override
-                            public void onSuccess(@Nullable String languageCode) {
-                                if (languageCode == null || languageCode.equals("und")) {
-                                    responseListener.onFailure(new int[ErrorCodes.LANGUAGE_UNKNOWN], 0);
-                                    Log.i("language detection", "Can't identify language.");
-                                } else {
-                                    result.setLanguage(new CustomLocale(languageCode));
-                                    responseListener.onDetectedText(result);
-                                    Log.i("language detection", "Language: " + languageCode);
-                                }
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Model couldn’t be loaded or other internal error.
-                                e.printStackTrace();
-                                responseListener.onFailure(new int[ErrorCodes.ERROR_LOADING_MODEL], 0);
-                            }
-                        });
+        responseListener.onFailure(new int[ErrorCodes.LANGUAGE_UNKNOWN], 0);
     }
 
     public void detectLanguage(final NeuralNetworkApiResult firstResult, final NeuralNetworkApiResult secondResult, boolean forceResult, final DetectMultiLanguageListener responseListener) {
-        float confidenceThreshold = 0.5F;
-        if(forceResult){
-            confidenceThreshold = 0.01F;
-        }
-        LanguageIdentifier languageIdentifier = LanguageIdentification.getClient(new LanguageIdentificationOptions.Builder().setConfidenceThreshold(confidenceThreshold).build());
-        languageIdentifier.identifyLanguage(firstResult.getText())
-                .addOnSuccessListener(
-                        new OnSuccessListener<String>() {
-                            @Override
-                            public void onSuccess(@Nullable String languageCode) {
-                                boolean firstResultFailed = false;
-                                if (languageCode == null || languageCode.equals("und")) {
-                                    firstResultFailed = true;
-                                    Log.i("language detection", "Can't identify language.");
-                                } else {
-                                    firstResult.setLanguage(new CustomLocale(languageCode));
-                                    Log.i("language detection", "Language: " + languageCode);
-                                }
-                                detectSecondLanguage(firstResult, secondResult, forceResult, firstResultFailed, responseListener);
-                            }
-                        })
-                .addOnFailureListener(
-                        new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                // Model couldn’t be loaded or other internal error.
-                                e.printStackTrace();
-                                detectSecondLanguage(firstResult, secondResult, forceResult, true, responseListener);
-                            }
-                        });
-    }
-
-    private void detectSecondLanguage(final NeuralNetworkApiResult firstResult, final NeuralNetworkApiResult secondResult, boolean forceResult, boolean firstResultFailed, final DetectMultiLanguageListener responseListener){
-        float confidenceThreshold = 0.5F;
-        if(forceResult){
-            confidenceThreshold = 0.01F;
-        }
-        LanguageIdentifier languageIdentifier = LanguageIdentification.getClient(
-                new LanguageIdentificationOptions.Builder().setConfidenceThreshold(confidenceThreshold).build());
-        languageIdentifier.identifyLanguage(secondResult.getText())
-                .addOnSuccessListener(new OnSuccessListener<String>() {
-                    @Override
-                    public void onSuccess(String languageCode) {
-                        if (languageCode == null || languageCode.equals("und")) {  //detection of second result failed
-                            Log.i("language detection", "Can't identify language.");
-                            if (firstResultFailed) {  //detection of first result failed
-                                responseListener.onFailure(new int[]{ErrorCodes.BOTH_RESULTS_FAIL}, 0);
-                            }else{   //detection of first result success
-                                responseListener.onDetectedText(firstResult, secondResult, ErrorCodes.SECOND_RESULT_FAIL);
-                            }
-                        }else{  //detection of second result success
-                            Log.i("language detection", "Language: " + languageCode);
-                            secondResult.setLanguage(new CustomLocale(languageCode));
-                            if (firstResultFailed) {  //detection of first result failed
-                                responseListener.onDetectedText(firstResult, secondResult, ErrorCodes.FIRST_RESULT_FAIL);
-                            }else{    //detection of first result success
-                                responseListener.onDetectedText(firstResult, secondResult, ErrorCodes.BOTH_RESULTS_SUCCESS);
-                            }
-                        }
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {  //detection of second result failed
-                        if (firstResultFailed) {  //detection of first result failed
-                            responseListener.onFailure(new int[]{ErrorCodes.BOTH_RESULTS_FAIL}, 0);
-                        }else{
-                            responseListener.onDetectedText(firstResult, secondResult, ErrorCodes.SECOND_RESULT_FAIL);
-                        }
-                    }
-                });
+        responseListener.onFailure(new int[]{ErrorCodes.BOTH_RESULTS_FAIL}, 0);
     }
 
     public interface DetectLanguageListener extends TranslatorListener {
