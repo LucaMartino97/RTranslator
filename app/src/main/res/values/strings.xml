@@ -16,7 +16,7 @@
 
 
 <resources>
-    <string name="app_name" translatable="false">RTranslator</string>
+    <string name="app_name" translatable="false">RTranslator Open</string>
 
     <string name="mic">mic</string>
     <string name="btHeadset">bt-headset</string>
