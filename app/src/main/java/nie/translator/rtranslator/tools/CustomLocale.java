@@ -25,6 +25,8 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.Set;
 
+import nie.translator.rtranslator.Global;
+
 public class CustomLocale implements Comparable<CustomLocale>, Serializable {
     @NonNull
     private Locale locale;
@@ -153,8 +155,19 @@ public class CustomLocale implements Comparable<CustomLocale>, Serializable {
         return locale.getDisplayVariant(inLocale);
     }
 
-    public String getDisplayName() {
-        return locale.getDisplayName();
+    public String getDisplayName(ArrayList<CustomLocale> ttsLanguages) {
+        String name = locale.getDisplayName();
+        name = name.substring(0,1).toUpperCase(locale) + name.substring(1);  //we convert the first letter to uppercase
+        if (containsLanguage(ttsLanguages, CustomLocale.getInstance(locale.getLanguage()))) {
+            return name;
+        } else {
+            return name + " (no TTS)";    // Notice that users cannot use TTS for this language.
+        }
+    }
+
+    public String getDisplayNameWithoutTTS() {
+        String name = locale.getDisplayName();
+        return name.substring(0,1).toUpperCase(locale) + name.substring(1);  //we convert the first letter to uppercase
     }
 
     public String getDisplayName(Locale locale) {
@@ -175,7 +188,7 @@ public class CustomLocale implements Comparable<CustomLocale>, Serializable {
 
     @Override
     public int compareTo(CustomLocale o) {
-        return getDisplayName().compareTo(((CustomLocale) o).getDisplayName());
+        return getDisplayNameWithoutTTS().compareTo(((CustomLocale) o).getDisplayNameWithoutTTS());
     }
 
     @Override
@@ -191,7 +204,7 @@ public class CustomLocale implements Comparable<CustomLocale>, Serializable {
 
     public boolean equalsLanguage(CustomLocale locale) {
         if (getLanguage() != null && locale != null && locale.getLanguage() != null) {
-            return getLanguage().equals(locale.getLanguage());
+            return getISO3Language().equals(locale.getISO3Language());
         } else {
             return false;
         }

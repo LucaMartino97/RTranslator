@@ -28,6 +28,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
+
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import nie.translator.rtranslator.Global;
 import nie.translator.rtranslator.R;
 
@@ -80,6 +85,21 @@ public class NoticeFragment extends Fragment {
         super.onStart();
         if(getContext() != null && !NotificationManagerCompat.from(getContext()).areNotificationsEnabled()){
             //Toast.makeText(getContext(), "Notification permission granted", Toast.LENGTH_SHORT).show();
+        }
+        //we create the readme file in the externalFilesDir
+        if(getContext() != null) {
+            File readmeFile = new File(getContext().getExternalFilesDir(null) + "/Readme.txt");
+            if(!readmeFile.exists()){
+                try {
+                    FileWriter writer = new FileWriter(readmeFile);
+                    writer.append("Insert the models in this folder, for more info read the tutorial for sideloading in the GitHub page of RTranslator");
+                    writer.flush();
+                    writer.close();
+                    android.util.Log.i("files", "Readme created");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 }

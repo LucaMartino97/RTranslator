@@ -63,12 +63,14 @@ public class Downloader{
     public int getRunningDownloadStatus(){
         SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
         long downloadId = sharedPreferences.getLong("currentDownloadId", -1);
-        if(downloadId != -1) {
+        if(downloadId >= 0) {
             Cursor result = query(downloadId);
             int index = result.getColumnIndex(DownloadManager.COLUMN_STATUS);
             if (index > 0 && result.moveToFirst() && result.getCount() > 0) {
                 return result.getInt(index);
             }
+        }else if(downloadId == -3){
+            return DownloadManager.STATUS_FAILED;
         }
         return -1;
     }
@@ -116,7 +118,7 @@ public class Downloader{
 
         long downloadId = sharedPreferences.getLong("currentDownloadId", -1);
         int currentProgress = 0;
-        if(downloadId != -1) {
+        if(downloadId >= 0) {
             int index = findDownloadUrlIndex(downloadId);
             if(index != -1 && index != lastDownloadSuccessIndex) {   //we check that the current download is different from the last success download (if they are the same that means that the next download is not started yet)
                 Cursor result = query(downloadId);

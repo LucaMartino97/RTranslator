@@ -18,6 +18,7 @@ package nie.translator.rtranslator.voice_translation._conversation_mode;
 
 import android.bluetooth.BluetoothAdapter;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -33,6 +34,7 @@ import android.widget.Toast;
 import android.widget.Toolbar;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import java.text.DateFormat;
@@ -40,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import nie.translator.rtranslator.Global;
 import nie.translator.rtranslator.R;
+import nie.translator.rtranslator.settings.SettingsActivity;
 import nie.translator.rtranslator.tools.FileLog;
 import nie.translator.rtranslator.tools.Tools;
 import nie.translator.rtranslator.tools.gui.RequestDialog;
@@ -64,6 +67,7 @@ public class PairingFragment extends PairingToolbarFragment {
     private ConstraintLayout constraintLayout;
     private Peer confirmConnectionPeer;
     private ListView listViewGui;
+    private TextView discoveryDescriptionBottom;
     private Timer connectionTimer;
     @Nullable
     private PeerListAdapter listView;
@@ -71,6 +75,8 @@ public class PairingFragment extends PairingToolbarFragment {
     private TextView noDevices;
     private TextView noPermissions;
     private TextView noBluetoothLe;
+    private AppCompatImageButton exitButton;
+    private AppCompatImageButton settingsButton;
     private final Object lock = new Object();
     private VoiceTranslationActivity.Callback communicatorCallback;
     private RecentPeersDataManager recentPeersDataManager;
@@ -148,7 +154,7 @@ public class PairingFragment extends PairingToolbarFragment {
                         disappearLoading(true, null);
                         connectingPeer = null;
                         if (errorCode == BluetoothCommunicator.CONNECTION_REJECTED) {
-                            Toast.makeText(activity, peer.getName() + getResources().getString(R.string.error_connection_rejected), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, peer.getName() + " " + getResources().getString(R.string.error_connection_rejected), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(activity, getResources().getString(R.string.error_connection), Toast.LENGTH_SHORT).show();
                         }
@@ -228,6 +234,7 @@ public class PairingFragment extends PairingToolbarFragment {
                 if (noPermissions.getVisibility() != View.VISIBLE) {
                     // appearance of the written of missing permission
                     listViewGui.setVisibility(View.GONE);
+                    discoveryDescriptionBottom.setVisibility(View.INVISIBLE);
                     noDevices.setVisibility(View.GONE);
                     discoveryDescription.setVisibility(View.GONE);
                     noPermissions.setVisibility(View.VISIBLE);
@@ -263,10 +270,13 @@ public class PairingFragment extends PairingToolbarFragment {
         super.onViewCreated(view, savedInstanceState);
         constraintLayout = view.findViewById(R.id.container);
         listViewGui = view.findViewById(R.id.list_view);
+        discoveryDescriptionBottom = view.findViewById(R.id.discoveryDescriptionBottom);
         discoveryDescription = view.findViewById(R.id.discoveryDescription);
         noDevices = view.findViewById(R.id.noDevices);
         noPermissions = view.findViewById(R.id.noPermission);
         noBluetoothLe = view.findViewById(R.id.noBluetoothLe);
+        exitButton = view.findViewById(R.id.exitButton);
+        settingsButton = view.findViewById(R.id.settingsButton);
     }
 
     @Override
@@ -281,6 +291,23 @@ public class PairingFragment extends PairingToolbarFragment {
         if (windowInsets != null) {
             constraintLayout.dispatchApplyWindowInsets(windowInsets.replaceSystemWindowInsets(windowInsets.getSystemWindowInsetLeft(),windowInsets.getSystemWindowInsetTop(),windowInsets.getSystemWindowInsetRight(),0));
         }
+
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(activity, SettingsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        });
+
+        exitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Log.d("button", "exitButton pressed");
+                activity.onBackPressed();
+            }
+        });
 
         // setting of array adapter
         initializePeerList();
@@ -385,6 +412,7 @@ public class PairingFragment extends PairingToolbarFragment {
             if (result == BluetoothCommunicator.BLUETOOTH_LE_NOT_SUPPORTED && noBluetoothLe.getVisibility() != View.VISIBLE) {
                 // appearance of the bluetooth le missing sign
                 listViewGui.setVisibility(View.GONE);
+                discoveryDescriptionBottom.setVisibility(View.INVISIBLE);
                 noDevices.setVisibility(View.GONE);
                 discoveryDescription.setVisibility(View.GONE);
                 noBluetoothLe.setVisibility(View.VISIBLE);
@@ -438,12 +466,14 @@ public class PairingFragment extends PairingToolbarFragment {
                 discoveryDescription.setVisibility(View.GONE);
                 noDevices.setVisibility(View.GONE);
                 listViewGui.setVisibility(View.VISIBLE);
+                discoveryDescriptionBottom.setVisibility(View.VISIBLE);
             }
 
             @Override
             public void onLastItemRemoved() {
                 super.onLastItemRemoved();
                 listViewGui.setVisibility(View.GONE);
+                discoveryDescriptionBottom.setVisibility(View.INVISIBLE);
                 if (noPermissions.getVisibility() != View.VISIBLE) {
                     discoveryDescription.setVisibility(View.VISIBLE);
                     noDevices.setVisibility(View.VISIBLE);

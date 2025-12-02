@@ -31,6 +31,7 @@ import nie.translator.rtranslator.Global;
 import nie.translator.rtranslator.LoadingActivity;
 import nie.translator.rtranslator.R;
 import nie.translator.rtranslator.tools.FileTools;
+import nie.translator.rtranslator.voice_translation.neural_networks.NeuralNetworkApi;
 
 public class DownloadReceiver extends BroadcastReceiver {
     @Override
@@ -44,63 +45,27 @@ public class DownloadReceiver extends BroadcastReceiver {
                     public void run() {
                         long downloadId = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
 
-                        Global global = (Global) context.getApplicationContext();
-                        if (global != null) {
-                            global.isForeground();
-                        }
-
                         if (downloadId != -1) {
                             Downloader downloader = new Downloader(context);
                             int urlIndex = downloader.findDownloadUrlIndex(downloadId);
                             if (urlIndex != -1) {
-                                SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
-                                //we save the success of the download
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("lastDownloadSuccess", DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
-                                editor.apply();
-                                //we reset the failure info of the transfer
-                                editor = sharedPreferences.edit();
-                                editor.putString("lastTransferFailure", "");
-                                editor.apply();
-                                //we move the downloaded content to internal storage and start the next download
-                                File from = new File(context.getExternalFilesDir(null) + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
-                                File to = new File(context.getFilesDir() + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
-                                int finalUrlIndex = urlIndex;
-                                FileTools.moveFile(from, to, new FileTools.MoveFileCallback() {
+                                String downloadedModelPath = context.getExternalFilesDir(null) + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex];
+                                //we check the integrity of the downloaded model
+                                NeuralNetworkApi.testModelIntegrity(downloadedModelPath, new NeuralNetworkApi.InitListener() {
                                     @Override
-                                    public void onSuccess() {
-                                        //we save the success of the transfer
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        editor.putString("lastTransferSuccess", DownloadFragment.DOWNLOAD_NAMES[finalUrlIndex]);
-                                        editor.apply();
-
-                                        if (finalUrlIndex < (DownloadFragment.DOWNLOAD_URLS.length - 1)) {  //if the download done is not the last one
-                                            //we start the next download
-                                            long newDownloadId = downloader.downloadModel(DownloadFragment.DOWNLOAD_URLS[finalUrlIndex + 1], DownloadFragment.DOWNLOAD_NAMES[finalUrlIndex + 1]);
-                                            editor = sharedPreferences.edit();
-                                            editor.putLong("currentDownloadId", newDownloadId);
-                                            editor.apply();
-                                        } else {
-                                            //we notify the completion of the download of all models
-                                            Handler mainHandler = new Handler(Looper.getMainLooper());
-                                            mainHandler.post(() -> Toast.makeText(context, context.getResources().getString(R.string.toast_download_completed), Toast.LENGTH_LONG).show());
-                                            //we save in the preferences that all the download and transfers are completed
-                                            editor = sharedPreferences.edit();
-                                            editor.putLong("currentDownloadId", -2);
-                                            editor.apply();
-
-                                            startRTranslator(context);
-                                        }
+                                    public void onInitializationFinished() {
+                                        transferModelAndStartNextDownload(context, downloader, urlIndex);
                                     }
 
                                     @Override
-                                    public void onFailure() {
-                                        //we save the failure of the transfer
-                                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                                        editor.putString("lastTransferFailure", DownloadFragment.DOWNLOAD_NAMES[finalUrlIndex]);
+                                    public void onError(int[] reasons, long value) {
+                                        SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
+                                        SharedPreferences.Editor editor;
+                                        //we save in the preferences that this download has failed (in this case we save it because because otherwise the downloader would return STATUS_SUCCESSFUL)
+                                        editor = sharedPreferences.edit();
+                                        editor.putLong("currentDownloadId", -3);
                                         editor.apply();
-                                        //we notify the failure to the user
-                                        notifyTransferFailed(context);
+                                        notifyDownloadFailed(context);
                                     }
                                 });
                             }
@@ -113,7 +78,7 @@ public class DownloadReceiver extends BroadcastReceiver {
         }
     }
 
-    private void notifyDownloadFailed(Context context){
+    private static void notifyDownloadFailed(Context context){
         //if the app is in background we generate a toast that notify the error
         Global global = (Global) context.getApplicationContext();
         if (global != null) {
@@ -125,7 +90,7 @@ public class DownloadReceiver extends BroadcastReceiver {
         }
     }
 
-    private void notifyTransferFailed(Context context){
+    private static void notifyTransferFailed(Context context){
         //if the app is in background we generate a toast that notify the error
         Global global = (Global) context.getApplicationContext();
         if (global != null) {
@@ -137,7 +102,7 @@ public class DownloadReceiver extends BroadcastReceiver {
         }
     }
 
-    private void startRTranslator(Context context){
+    private static void startRTranslator(Context context){
         Global global = (Global) context.getApplicationContext();
         if (global != null) {
             AccessActivity activity = global.getRunningAccessActivity();
@@ -151,6 +116,121 @@ public class DownloadReceiver extends BroadcastReceiver {
                 activity.startActivity(intent);
                 activity.finish();
             }
+        }
+    }
+
+
+
+    private static void transferModelAndStartNextDownload(Context context, Downloader downloader, int urlIndex){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
+        //we save the success of the download
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString("lastDownloadSuccess", DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
+        editor.apply();
+        //we reset the failure info of the transfer
+        editor = sharedPreferences.edit();
+        editor.putString("lastTransferFailure", "");
+        editor.apply();
+        //we move the downloaded content to internal storage and start the next download
+        File from = new File(context.getExternalFilesDir(null) + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
+        File to = new File(context.getFilesDir() + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex]);
+        int finalUrlIndex = urlIndex;
+        FileTools.moveFile(from, to, new FileTools.MoveFileCallback() {
+            @Override
+            public void onSuccess() {
+                //we save the success of the transfer
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("lastTransferSuccess", DownloadFragment.DOWNLOAD_NAMES[finalUrlIndex]);
+                editor.apply();
+
+                internalCheckAndStartNextDownload(context, downloader, finalUrlIndex);
+            }
+
+            @Override
+            public void onFailure() {
+                //we save the failure of the transfer
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("lastTransferFailure", DownloadFragment.DOWNLOAD_NAMES[finalUrlIndex]);
+                editor.apply();
+                //we notify the failure to the user
+                notifyTransferFailed(context);
+            }
+        });
+    }
+
+    public static void internalCheckAndStartNextDownload(Context context, Downloader downloader, int urlIndex){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor;
+        if (urlIndex < (DownloadFragment.DOWNLOAD_URLS.length - 1)) {  //if the download done is not the last one
+            //we verify if the model to be downloaded next is already in internal memory and if it is not corrupted
+            String nextDownloadInternalPath = context.getFilesDir() + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex + 1];
+            File nextDownloadInternalFile = new File(nextDownloadInternalPath);
+            if(nextDownloadInternalFile.exists()){
+                NeuralNetworkApi.testModelIntegrity(nextDownloadInternalPath, new NeuralNetworkApi.InitListener() {
+                    @Override
+                    public void onInitializationFinished() {   //the model to be downloaded next is already in internal memory and it is not corrupted
+                        //we save the success of the download
+                        SharedPreferences.Editor editor = sharedPreferences.edit();
+                        editor.putString("lastDownloadSuccess", DownloadFragment.DOWNLOAD_NAMES[urlIndex+1]);
+                        editor.apply();
+                        //we save the success of the transfer
+                        editor = sharedPreferences.edit();
+                        editor.putString("lastTransferSuccess", DownloadFragment.DOWNLOAD_NAMES[urlIndex+1]);
+                        editor.apply();
+                        //we start the next download
+                        internalCheckAndStartNextDownload(context, downloader, urlIndex+1);
+                    }
+
+                    @Override
+                    public void onError(int[] reasons, long value) {
+                        boolean result = nextDownloadInternalFile.delete();
+                        externalCheckAndStartNextDownload(context, downloader, urlIndex);
+                    }
+                });
+            }else{
+                externalCheckAndStartNextDownload(context, downloader, urlIndex);
+            }
+        } else {
+            //we notify the completion of the download of all models
+            Handler mainHandler = new Handler(Looper.getMainLooper());
+            mainHandler.post(() -> Toast.makeText(context, context.getResources().getString(R.string.toast_download_completed), Toast.LENGTH_LONG).show());
+            //we save in the preferences that all the download and transfers are completed
+            editor = sharedPreferences.edit();
+            editor.putLong("currentDownloadId", -2);
+            editor.apply();
+
+            startRTranslator(context);
+        }
+    }
+
+    private static void externalCheckAndStartNextDownload(Context context, Downloader downloader, int urlIndex){
+        SharedPreferences sharedPreferences = context.getSharedPreferences("default", Context.MODE_PRIVATE);
+        //we verify if the model to be downloaded next is already in external memory and if it is not corrupted
+        String nextDownloadInternalPath = context.getExternalFilesDir(null) + "/" + DownloadFragment.DOWNLOAD_NAMES[urlIndex + 1];
+        File nextDownloadInternalFile = new File(nextDownloadInternalPath);
+        if(nextDownloadInternalFile.exists()){
+            NeuralNetworkApi.testModelIntegrity(nextDownloadInternalPath, new NeuralNetworkApi.InitListener() {
+                @Override
+                public void onInitializationFinished() {   //the model to be downloaded next is already in external memory and it is not corrupted
+                    transferModelAndStartNextDownload(context, downloader, urlIndex+1);
+                }
+
+                @Override
+                public void onError(int[] reasons, long value) {
+                    boolean result = nextDownloadInternalFile.delete();
+                    //we start the next download
+                    long newDownloadId = downloader.downloadModel(DownloadFragment.DOWNLOAD_URLS[urlIndex + 1], DownloadFragment.DOWNLOAD_NAMES[urlIndex + 1]);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putLong("currentDownloadId", newDownloadId);
+                    editor.apply();
+                }
+            });
+        }else{
+            //we start the next download
+            long newDownloadId = downloader.downloadModel(DownloadFragment.DOWNLOAD_URLS[urlIndex + 1], DownloadFragment.DOWNLOAD_NAMES[urlIndex + 1]);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putLong("currentDownloadId", newDownloadId);
+            editor.apply();
         }
     }
 }

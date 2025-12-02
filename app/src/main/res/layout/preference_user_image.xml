@@ -30,7 +30,7 @@
         android:layout_marginBottom="16dp"
         android:scaleType="fitXY"
         android:src="@drawable/user_icon"
-        android:tint="#5F5F5F"
+        android:tint="@color/primary_very_dark"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

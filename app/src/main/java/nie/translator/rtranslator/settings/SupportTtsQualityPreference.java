@@ -75,6 +75,7 @@ public class SupportTtsQualityPreference extends SwitchPreference {
 
     public void downloadLanguages() {
         if(global != null && fragment != null) {
+            fragment.addDownload();
             global.getLanguages(false, true, new Global.GetLocalesListListener() {
                 @Override
                 public void onSuccess(ArrayList<CustomLocale> result) {
@@ -98,7 +99,6 @@ public class SupportTtsQualityPreference extends SwitchPreference {
                     }
                 }
             });
-            fragment.addDownload();
         }
     }
 

@@ -28,9 +28,13 @@
     <string name="loading">caricamento…</string>
     <string name="forward">avanti</string>
     <string name="no_graph_data">Nessun dato sull\' utilizzo presente</string>
-    <string name="conversation">conversazione</string>
-    <string name="connection">connessione</string>
+    <string name="conversation">Conversazione</string>
+    <string name="connection">Connessione</string>
     <string name="translate">Traduci</string>
+    <string name="fix">correggi</string>
+    <string name="automatic">Automatico</string>
+    <string name="chat">Chat</string>
+    <string name="select_tts">Seleziona TTS</string>
 
     <string name="notification_channel_name">notifica uso in background</string>
 
@@ -58,6 +62,7 @@
 
     <string name="hint_edit_text_message">Scrivi un messaggio</string>
     <string name="hint_user_name">Nome utente</string>
+    <string name="hint_text">Inserisci il testo</string>
 
     <string name="error_missing_location_permissions">Non é possibile eseguire la modalità Conversazione senza il permesso per la posizione e del bluetooth, andare nelle impostazioni per concederli, oppure reinstallare l\' app</string>
     <string name="error_missing_mic_permissions">Senza il permesso per il microfono il riconoscimento vocale non funziona, andare nelle impostazioni per concedere il permesso oppure reinstalla l\' app</string>
@@ -71,7 +76,7 @@
     <string name="error_internet_lack_accessing">Per eseguire l\'operazione è necessaria una connessione a internet, controllare la propria connessione</string>
     <string name="error_internet_lack_services">Impossibile tradurre il messaggio, controllare la connessione a internet</string>
     <string name="error_internet_lack_loading_languages">Per visualizzare le lingue è necessaria una connessione a internet, controllare la propria connessione e riprovare</string>
-    <string name="error_connection_rejected"> ha rifiutato la richiesta di connessione</string>
+    <string name="error_connection_rejected">ha rifiutato la richiesta di connessione</string>
     <string name="error_connection">Errore di connessione</string>
     <string name="error_starting_search">Errore durante l\' avvio della ricerca</string>
     <string name="error_cannot_interact_connection">Non si può interagire con i dispositivi durante la connessione</string>
@@ -85,13 +90,17 @@
     <string name="error_privacy_unchecked">Devi aver letto la privacy policy per usare l\'app</string>
     <string name="error_missing_username">Inserire un nome</string>
     <string name="error_wrong_username">Il testo contiene caratteri non ammessi, sono ammessi solo i seguenti caratteri: </string>
-    <string name="error_models_loading">C\'è stato un errore nel caricamento dei file dei modelli di rete neurale per la traduzione e il riconoscimento vocale, provare a riavviare l\'app, se il problema persiste allora ripristinarla.</string>
+    <string name="error_models_loading">C\'è stato un errore nel caricamento dei file dei modelli di rete neurale per la traduzione e il riconoscimento vocale, probabilmente qualche file è danneggiato, provare a riavviare l\'app, se il problema persiste allora premere il pulsante "correggi" e solo i file danneggiati verranno riscaricati.</string>
     <string name="error_download">Errore nel download, assicurati di avere una connessione a internet e riprova:</string>
     <string name="error_transfer">Errore nel trasferimento del file scaricato dalla memoria esterna a quella interna, assicurati di non aver rimosso una scheda SD o altri dispositivi di archiviazione esterni e riprova tenendo aperta l\'app:</string>
     <string name="error_ram">Il tuo dispositivo ha meno di 6GB di RAM, per funzionare l\'app ha bisogno di almeno 6GB di RAM, puoi provare lo stesso a usarla, ma molto probabilmente crasherà.</string>
+    <string name="error_storage">Spazio di archiviazione basso, il download potrebbe fallire</string>
 
     <string name="title_graph">DOLLARI (USD) SPESI OGNI ORA</string>
+    <string name="title_image_selector">immagine del profilo</string>
 
+    <string name="home_walkietalkie_mode">Modalità WalkieTalkie</string>
+    <string name="home_conversation_mode">Modalità Conversazione</string>
     <string name="title_fragment_conversation">Conversazione</string>
     <string name="title_fragment_walkie_talkie">WalkieTalkie</string>
     <string name="title_fragment_notice">Avviso</string>
@@ -118,6 +127,8 @@
     <string name="description_notice">RTranslator usa <a href="https://openai.com/index/whisper/">OpenAi Whisper</a> per il riconoscimento vocale e <a href="https://ai.meta.com/research/no-language-left-behind/">Meta NLLB</a> per la traduzione, questi modelli richiedono abbastanza potenza e almeno 6GB di RAM per essere eseguiti, quindi assicurati di usare uno smartphone moderno per evitare rallentamenti o crash. Per più info su RTranslator visita il progetto GitHub dell\'app <a href="https://github.com/niedev/RTranslator">qui</a></string>
     <string name="description_download">Download di %1$s in corso</string>
     <string name="description_transfer">Trasferimento di %1$s nella memoria interna</string>
+    <string name="description_integrity_check">Verifica dell\'integrità di %1$s</string>
+    <string name="description_tts">Per parlare, RTranslator usa il TTS di sistema, il TTS consigliato è il <a href="https://play.google.com/store/apps/details?id=com.google.android.tts">TTS di Google</a>, ma puoi usare quello che preferisci, per selezionarlo clicca sul pulsante sotto</string>
 
     <string name="preference_header_language">Lingua</string>
     <string name="preference_header_output">Output</string>
@@ -125,15 +136,25 @@
     <string name="preference_header_advanced">Avanzate</string>
 
     <string name="preference_title_mic_sensitivity">Sensibilità microfono</string>
+    <string name="preference_title_languages_quality">Supporto lingue a bassa qualità</string>
     <string name="preference_title_support_tts_quality">Supporto lingue con tts a bassa qualità</string>
     <string name="preference_title_language">Lingua personale</string>
     <string name="preference_title_tts">Sintetizzatore vocale</string>
     <string name="preference_title_speech_timeout">Timeout fine voce</string>
     <string name="preference_title_prev_voice_duration">Durata anticipo voce</string>
+    <string name="preference_title_beam_size">Beam Search (beta)</string>
 
     <string name="preference_description_mic_sensitivity">Seleziona il livello di volume che serve per avviare e mantenere il riconoscimento vocale</string>
+    <string name="preference_description_languages_quality">Permette di supportare anche le lingue che hanno una bassa qualità di traduzione o del riconoscimento vocale</string>
+    <string name="preference_title_show_original_transcription">Mostra le trascrizioni originali oltre la traduzione</string>
+    <string name="preference_description_show_original_transcription_msg_preference">Consente di mostrare la trascrizione originale oltre la traduzione del messaggio.</string>
     <string name="preference_description_support_tts_quality">Permette di supportare anche le lingue che hanno una bassa qualità del sintetizzatore vocale</string>
-    <string name="preference_description_tts">Impostazioni di sistema del tts</string>
+    <string name="preference_description_tts">Impostazioni di sistema del tts, un eventuale cambio del motore predefinito sarà applicato solo dopo il riavvio dell\'app</string>
     <string name="preference_description_speech_timeout">Seleziona il tempo che deve trascorrere dopo aver smesso di parlare per inviare il testo trascritto</string>
     <string name="preference_description_prev_voice_duration">Seleziona la durata della registrazione precedente a quando si inizia a parlare che verrà inclusa nel riconoscimento vocale</string>
+    <string name="preference_description_beam_size">Imposta la beam size dell\'algoritmo di beam search, per migliorare la qualità della traduzione a discapito delle performance (solo per la traduzione testuale)</string>
+    <string name="conversation_mode" >Modalità Conversazione</string>
+    <string name="conversation_mode_running" >La modalità conversazione è in esecuzione...</string>
+    <string name="walkietalkie_mode" >Modalità WalkieTalkie</string>
+    <string name="walkietalkie_mode_running" >La modalità WalkieTalkie è in esecuzione...</string>
 </resources>

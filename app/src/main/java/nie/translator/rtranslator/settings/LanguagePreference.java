@@ -73,11 +73,21 @@ public class LanguagePreference extends Preference {
         global.getLanguage(false, new Global.GetLocaleListener() {
             @Override
             public void onSuccess(CustomLocale result) {
-                if (getSummary() == null || "".equals((String) getSummary())) {    // to avoid changing the summary after a language change after the initializeLanguageList () call
-                    setSummary(result.getDisplayName());  // if we have an error of lack of internet we simply don't insert the summary
-                } else if (summary != null && summary.equals((String) getSummary())) {
-                    setSummary(result.getDisplayName());  // if we have an error of lack of internet we simply don't insert the summary
-                }
+                global.getTTSLanguages(false, new Global.GetLocalesListListener() {
+                    @Override
+                    public void onSuccess(ArrayList<CustomLocale> ttsLanguages) {
+                        if (getSummary() == null || "".equals((String) getSummary())) {    // to avoid changing the summary after a language change after the initializeLanguageList () call
+                            setSummary(result.getDisplayName(ttsLanguages));  // if we have an error of lack of internet we simply don't insert the summary
+                        } else if (summary != null && summary.equals((String) getSummary())) {
+                            setSummary(result.getDisplayName(ttsLanguages));  // if we have an error of lack of internet we simply don't insert the summary
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(int[] reasons, long value) {
+                        //never called in this case
+                    }
+                });
             }
 
             @Override
@@ -148,11 +158,21 @@ public class LanguagePreference extends Preference {
                                 global.getLanguages(true, true, new Global.GetLocalesListListener() {
                                     @Override
                                     public void onSuccess(ArrayList<CustomLocale> result) {
-                                        if (result.contains((CustomLocale) listView.getItem(position))) {
-                                            global.setLanguage((CustomLocale) listView.getItem(position));
-                                            CustomLocale item=(CustomLocale) listView.getItem(position);
-                                            setSummary(item.getDisplayName());
-                                        }
+                                        global.getTTSLanguages(true, new Global.GetLocalesListListener() {
+                                            @Override
+                                            public void onSuccess(ArrayList<CustomLocale> ttsLanguages) {
+                                                if (result.contains((CustomLocale) listView.getItem(position))) {
+                                                    global.setLanguage((CustomLocale) listView.getItem(position));
+                                                    CustomLocale item=(CustomLocale) listView.getItem(position);
+                                                    setSummary(item.getDisplayName(ttsLanguages));
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onFailure(int[] reasons, long value) {
+                                                //never called in this case
+                                            }
+                                        });
                                     }
 
                                     @Override

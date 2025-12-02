@@ -22,9 +22,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import androidx.annotation.NonNull;
+
+import java.util.ArrayList;
+
 import nie.translator.rtranslator.Global;
 import nie.translator.rtranslator.tools.BluetoothHeadsetUtils;
 import nie.translator.rtranslator.tools.CustomLocale;
+import nie.translator.rtranslator.tools.TTS;
 import nie.translator.rtranslator.tools.Tools;
 import nie.translator.rtranslator.tools.gui.messages.GuiMessage;
 import nie.translator.rtranslator.tools.gui.peers.GuiPeer;
@@ -33,6 +37,7 @@ import nie.translator.rtranslator.voice_translation._conversation_mode.communica
 
 import nie.translator.rtranslator.bluetooth.Message;
 import nie.translator.rtranslator.bluetooth.Peer;
+import nie.translator.rtranslator.voice_translation._walkie_talkie_mode._walkie_talkie.WalkieTalkieService;
 import nie.translator.rtranslator.voice_translation.neural_networks.NeuralNetworkApiText;
 import nie.translator.rtranslator.voice_translation.neural_networks.translation.Translator;
 import nie.translator.rtranslator.voice_translation.neural_networks.voice.Recognizer;
@@ -113,6 +118,13 @@ public class ConversationService extends VoiceTranslationService {
                     ConversationService.super.notifyVoiceEnd();
                 }
             }
+
+            @Override
+            public void onVolumeLevel(float volumeLevel) {
+                super.onVolumeLevel(volumeLevel);
+                // we notify the client
+                ConversationService.super.notifyVolumeLevel(volumeLevel);
+            }
         };
         clientHandler = new Handler(new Handler.Callback() {
             @Override
@@ -165,14 +177,24 @@ public class ConversationService extends VoiceTranslationService {
                         translator.translateMessage(conversationMessage, result, TRANSLATOR_BEAM_SIZE, new Translator.TranslateMessageListener() {
                             @Override
                             public void onTranslatedMessage(ConversationMessage conversationMessage, long messageID, boolean isFinal) {
-                                if(isFinal) {
-                                    speak(conversationMessage.getPayload().getText(), conversationMessage.getPayload().getLanguage());
-                                }
-                                message.setText(conversationMessage.getPayload().getText());   // updating the text with the new translated text (and without the language code)
-                                GuiMessage guiMessage = new GuiMessage(message, messageID, false, true);
-                                notifyMessage(guiMessage);
-                                // we save every new message in the exchanged messages so that the fragment can restore them
-                                addOrUpdateMessage(guiMessage);
+                                global.getTTSLanguages(true, new Global.GetLocalesListListener() {
+                                    @Override
+                                    public void onSuccess(ArrayList<CustomLocale> ttsLanguages) {
+                                        if(isFinal && CustomLocale.containsLanguage(ttsLanguages, conversationMessage.getPayload().getLanguage())) { // check if the language can be speak
+                                            speak(conversationMessage.getPayload().getText(), conversationMessage.getPayload().getLanguage());
+                                        }
+                                        message.setText(conversationMessage.getPayload().getText());   // updating the text with the new translated text (and without the language code)
+                                        GuiMessage guiMessage = new GuiMessage(message, messageID, false, isFinal);
+                                        notifyMessage(guiMessage);
+                                        // we save every new message in the exchanged messages so that the fragment can restore them
+                                        addOrUpdateMessage(guiMessage);
+                                    }
+
+                                    @Override
+                                    public void onFailure(int[] reasons, long value) {
+                                        //never called in this case
+                                    }
+                                });
                             }
 
                             @Override
@@ -261,7 +283,7 @@ public class ConversationService extends VoiceTranslationService {
     }
 
     @Override
-    protected boolean shouldStopMicDuringTTS() {
+    protected boolean shouldDeactivateMicDuringTTS() {
         return !isBluetoothHeadsetConnected();
     }
 

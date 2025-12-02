@@ -26,6 +26,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceViewHolder;
 
@@ -70,10 +71,11 @@ public class UserNamePreference extends Preference {
         super.onBindViewHolder(holder);
         username = (TextView) holder.findViewById(R.id.username);
         ImageButton editUsernameButton = (ImageButton) holder.findViewById(R.id.editNameButton);
+        ConstraintLayout container = (ConstraintLayout) holder.findViewById(R.id.constraintLayout);
 
         //user name initialization
         username.setText(global.getName());
-        editUsernameButton.setOnClickListener(new View.OnClickListener() {
+        View.OnClickListener clickListener = new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (activity != null) {
@@ -115,7 +117,9 @@ public class UserNamePreference extends Preference {
                     dialog.show();
                 }
             }
-        });
+        };
+        container.setOnClickListener(clickListener);
+        editUsernameButton.setOnClickListener(clickListener);
     }
 
     public void setActivity(Activity activity) {

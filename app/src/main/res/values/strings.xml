@@ -30,9 +30,13 @@
     <string name="loading">loading…</string>
     <string name="forward">forward</string>
     <string name="no_graph_data">No usage data present</string>
-    <string name="conversation">conversation</string>
-    <string name="connection">connection</string>
+    <string name="conversation">Conversation</string>
+    <string name="connection">Connection</string>
     <string name="translate">Translate</string>
+    <string name="fix">fix</string>
+    <string name="automatic">Automatic</string>
+    <string name="chat">Chat</string>
+    <string name="select_tts">Select TTS</string>
 
     <string name="notification_channel_name">use in background notification</string>
 
@@ -60,6 +64,7 @@
 
     <string name="hint_edit_text_message">Write a message</string>
     <string name="hint_user_name">Name</string>
+    <string name="hint_text">Insert text</string>
 
     <string name="error_missing_location_permissions">It is not possible to use the Conversation mode without location and bluetooth permissions, go to the settings to grant them, or reinstall the app</string>
     <string name="error_missing_mic_permissions">Without the microphone permission the voice recognition does not work, go to the settings to grant the permission or reinstall the app</string>
@@ -73,7 +78,7 @@
     <string name="error_internet_lack_accessing">To perform the operation an internet connection is required, check your connection</string>
     <string name="error_internet_lack_services">Unable to translate message, check internet connection</string>
     <string name="error_internet_lack_loading_languages">To view the languages you need an internet connection, check your connection and try again</string>
-    <string name="error_connection_rejected"> refused the connection request</string>
+    <string name="error_connection_rejected">refused the connection request</string>
     <string name="error_connection">Connection error</string>
     <string name="error_starting_search">Error starting search</string>
     <string name="error_cannot_interact_connection">cannot interact with devices during connection</string>
@@ -87,13 +92,17 @@
     <string name="error_privacy_unchecked">You must have read the privacy policy to use the app</string>
     <string name="error_missing_username">Insert a name</string>
     <string name="error_wrong_username">The text contains illegal characters, only the following characters are allowed: </string>
-    <string name="error_models_loading">There was an error loading the files of the models for translation and speech recognition, try restarting the app, if the problem persists then reset it.</string>
+    <string name="error_models_loading">There was an error loading the files of the models for translation and speech recognition, probably some files are corrupted, try restarting the app, if the problem persists then press the fix button and only the corrupted files will be re-downloaded.</string>
     <string name="error_download">Error in the download, please ensure you have internet connection and retry:</string>
     <string name="error_transfer">Error in the transfer of the downloaded file from external to internal memory, please ensure you have not removed an sd card or other external storage devices and retry keeping the app open:</string>
     <string name="error_ram">Your device has less than 6GB of RAM, the app needs at least 6GB of RAM to work, you can still try to use it, but it will most likely crash.</string>
+    <string name="error_storage">Low storage space, the download may fail</string>
 
     <string name="title_graph">DOLLARS (USD) SPENT EVERY HOUR</string>
+    <string name="title_image_selector">user image</string>
 
+    <string name="home_walkietalkie_mode">WalkieTalkie Mode</string>
+    <string name="home_conversation_mode">Conversation Mode</string>
     <string name="title_fragment_conversation">Conversation</string>
     <string name="title_fragment_walkie_talkie">WalkieTalkie</string>
     <string name="title_fragment_notice">Notice</string>
@@ -121,6 +130,8 @@
     <string name="description_notice">RTranslator uses <a href="https://openai.com/index/whisper/">OpenAi\'s Whisper</a> for speech recognition and <a href="https://ai.meta.com/research/no-language-left-behind/">Meta\'s NLLB</a> for translations, these models require quite a bit of power and at least 6GB of RAM to run, so make sure you\'re using a modern smartphone to avoid slowdowns or crashes. For more info on RTranslator visit the GitHub project of the app <a href="https://github.com/niedev/RTranslator">here</a></string>
     <string name="description_download">Downloading %1$s</string>
     <string name="description_transfer">Transferring %1$s in internal memory</string>
+    <string name="description_integrity_check">Checking integrity of %1$s</string>
+    <string name="description_tts">To speak, RTranslator uses the system\'s default TTS engine, the recommended TTS is the <a href="https://play.google.com/store/apps/details?id=com.google.android.tts">Google TTS</a>, but you can choose the one you prefer, to select it, click on the button below</string>
 
     <string name="preference_header_language">Language</string>
     <string name="preference_header_output">Output</string>
@@ -128,16 +139,26 @@
     <string name="preference_header_advanced">Advanced</string>
 
     <string name="preference_title_mic_sensitivity">Microphone sensitivity</string>
+    <string name="preference_title_languages_quality">Support low quality languages</string>
+    <string name="preference_title_show_original_transcription">Show original transcriptions beyond the translation</string>
     <string name="preference_title_support_tts_quality">Support languages with low quality tts</string>
     <string name="preference_title_language">Personal language</string>
     <string name="preference_title_tts">Text to speech</string>
     <string name="preference_title_speech_timeout">End of voice timeout</string>
     <string name="preference_title_prev_voice_duration">Voice anticipation duration</string>
+    <string name="preference_title_beam_size">Beam Search (beta)</string>
 
     <string name="preference_description_mic_sensitivity">Select the volume level you need to start and maintain voice recognition</string>
-    <string name="preference_description_support_tts_quality">It allow to also supports languages ​​that have a low quality speech synthesizer</string>
-    <string name="preference_description_tts">System settings of tts</string>
+    <string name="preference_description_languages_quality">It allow to also supports languages that have low translation or speech recognition quality</string>
+    <string name="preference_description_show_original_transcription_msg_preference">It allows to show the original transcription beyond the translation of the message.</string>
+    <string name="preference_description_support_tts_quality">It allow to also supports languages that have a low quality speech synthesizer</string>
+    <string name="preference_description_tts">System settings of tts, an eventual change of the preferred engine will be applied only after the restart of the app</string>
     <string name="preference_description_speech_timeout">Select the time after you stop talking to send the transcribed text</string>
     <string name="preference_description_prev_voice_duration">Select the length of the recording before you start speaking that will be included in the voice recognition</string>
+    <string name="preference_description_beam_size">Set the beam size of the beam search algorithm, to improve translation quality at the expense of speed (only for text translation)</string>
+    <string name="conversation_mode" >Conversation</string>
+    <string name="conversation_mode_running" >Conversation mode is running...</string>
+    <string name="walkietalkie_mode" >WalkieTalkie</string>
+    <string name="walkietalkie_mode_running" >WalkieTalkie mode is running...</string>
 
 </resources>

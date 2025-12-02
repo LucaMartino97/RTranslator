@@ -30,6 +30,8 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.util.Arrays;
+
 import nie.translator.rtranslator.Global;
 import nie.translator.rtranslator.voice_translation._conversation_mode._conversation.ConversationService;
 
@@ -48,6 +50,7 @@ import nie.translator.rtranslator.voice_translation._conversation_mode._conversa
 public class Recorder {
     private final Global global;
     private boolean isRecording;
+    private boolean isManualMode = false;
     public static final int[] SAMPLE_RATE_CANDIDATES = new int[]{16000};
     private static final int CHANNEL = AudioFormat.CHANNEL_IN_MONO;
     private static final int ENCODING = AudioFormat.ENCODING_PCM_FLOAT;   //original: AudioFormat.ENCODING_PCM_16BIT
@@ -174,7 +177,7 @@ public class Recorder {
             mThread.interrupt();
             mThread = null;
         }
-        if(mAudioRecord != null) {
+        if (mAudioRecord != null) {
             mAudioRecord.stop();
         }
         //mBuffer = null;
@@ -189,8 +192,28 @@ public class Recorder {
     public void dismiss() {
         if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
             mLastVoiceHeardMillis = Long.MAX_VALUE;
-            mCallback.onVoiceEnd();
+            //mCallback.onVoiceEnd();
         }
+    }
+
+    public void end() {
+        //convert the relevant portion of the circular mBuffer to a normal array
+        int voiceLength = getMBufferRangeSize(startVoiceIndex, tailIndex);
+        float[] data = new float[voiceLength];
+        int circularIndex = startVoiceIndex;
+        for(int i=0; i<voiceLength; i++){
+            data[i] = mBuffer[circularIndex];
+            if (circularIndex < mBuffer.length-1){
+                circularIndex++;
+            }else{
+                circularIndex = 0;
+            }
+        }
+        mCallback.onVoice(data, voiceLength);
+        //reset relevant variables
+        startVoiceIndex = 0;  //is not necessary
+        mLastVoiceHeardMillis = Long.MAX_VALUE;
+        mCallback.onVoiceEnd();
     }
 
     public void destroy(){
@@ -245,6 +268,40 @@ public class Recorder {
         return null;
     }
 
+    public boolean isManualMode() {
+        return isManualMode;
+    }
+
+    public void setManualMode(boolean manualMode) {
+        if(isManualMode != manualMode) {
+            isManualMode = manualMode;
+            if(isRecording){
+                mCallback.onVoiceEnd();
+            }
+            if(isManualMode){
+                Log.d("mic", "manual mode activating");
+                stop();
+                Log.d("mic", "manual mode activated");
+            }else{
+                start();
+                Log.d("mic", "manual mode deactivated");
+            }
+        }
+    }
+
+    public void startRecording(){
+        start();
+    }
+
+    public void stopRecording(){
+        end();
+        stop();
+    }
+
+    public boolean isRecording() {
+        return isRecording;
+    }
+
     /**
      * Continuously processes the captured audio and notifies {@link #mCallback} of corresponding
      * events.
@@ -255,8 +312,13 @@ public class Recorder {
         @Override
         public void run() {
             while (!Thread.currentThread().isInterrupted()) {
-                if(mAudioRecord != null) {
-                    int prevVoiceLength = (global.getPrevVoiceDuration() / 1000) * sampleRate;
+                if (mAudioRecord != null) {
+                    int prevVoiceLength;
+                    if (isManualMode) {
+                        prevVoiceLength = (int) (0.1 * sampleRate);  //if we are using manual mode we use a reduced prev voice duration
+                    } else {
+                        prevVoiceLength = (global.getPrevVoiceDuration() / 1000) * sampleRate;
+                    }
                     int size;
                     int oldTailIndex = tailIndex;
                     boolean jumped;
@@ -275,11 +337,16 @@ public class Recorder {
                     if ((oldTailIndex < headIndex && tailIndex > headIndex) || (oldTailIndex > headIndex && tailIndex > headIndex && jumped)) {  //if we overwrote the oldest data
                         headIndex = tailIndex + 1;  //we adjust the headIndex accordingly
                     }
+                    //we notify volume level
+                    notifyVolumeLevel(mBuffer, oldTailIndex, tailIndex);
+                    //we do the rest of voice processing
                     final long now = System.currentTimeMillis();
                     if (isHearingVoice(mBuffer, oldTailIndex, tailIndex)) {
                         if (mLastVoiceHeardMillis == Long.MAX_VALUE) {    // use Long's maximum limit to indicate that we have no voice
                             mVoiceStartedMillis = now;
-                            mCallback.onVoiceStart();
+                            if(!Thread.currentThread().isInterrupted()) {
+                                mCallback.onVoiceStart();
+                            }
                             if (getMBufferSize() > prevVoiceLength) {
                                 if (tailIndex - prevVoiceLength >= 0) {
                                     startVoiceIndex = tailIndex - prevVoiceLength;
@@ -292,92 +359,144 @@ public class Recorder {
                         }
                         mLastVoiceHeardMillis = now;
                         if (now - (mVoiceStartedMillis - global.getPrevVoiceDuration()) > MAX_SPEECH_LENGTH_MILLIS) {
-                            end();
+                            if(!Thread.currentThread().isInterrupted()) {
+                                end();
+                            }
                         }
                     } else if (mLastVoiceHeardMillis != Long.MAX_VALUE) {
                         if (now - mLastVoiceHeardMillis > global.getSpeechTimeout()) {
-                            end();
+                            if(!Thread.currentThread().isInterrupted()) {
+                                end();
+                            }
                         }
                     }
                 }
             }
+            dismiss();
+            headIndex = 0;
+            tailIndex = 0;
         }
+    }
 
-        private void end() {
-            //convert the relevant portion of the circular mBuffer to a normal array
-            int voiceLength = getMBufferRangeSize(startVoiceIndex, tailIndex);
-            float[] data = new float[voiceLength];
-            int circularIndex = startVoiceIndex;
-            for(int i=0; i<voiceLength; i++){
-                data[i] = mBuffer[circularIndex];
-                if (circularIndex < mBuffer.length-1){
-                    circularIndex++;
-                }else{
-                    circularIndex = 0;
-                }
+    private int getMBufferSize(){
+        return getMBufferRangeSize(headIndex, tailIndex);
+    }
+
+    private int getMBufferRangeSize(int begin, int end){
+        if(begin <= end){
+            return end - begin;
+        }else{    //(begin > end)
+            return (mBuffer.length-begin) + end;
+        }
+    }
+
+    private boolean isHearingVoice(byte[] buffer, int size) {   //old method to measure threshold (not used)
+        for (int i = 0; i < size - 1; i += 2) {
+            // The buffer has LINEAR16 (2 bytes) in little endian.
+            // Therefore, to take the integer value at position i, we convert the (i+1)-th byte into an integer (positive),
+            // shift it to the left by 8 bits and add to it the absolute integer value of the i-th byte
+            int s = buffer[i + 1];
+            if (s < 0) s *= -1;
+            s <<= 8;
+            s += Math.abs(buffer[i]);
+            //if the value is grater than the threshold the method returns true
+            int amplitudeThreshold = global.getAmplitudeThreshold();
+            if (s > amplitudeThreshold) {
+                return true;
             }
-            mCallback.onVoice(data, voiceLength);
-            //reset relevant variables
-            startVoiceIndex = 0;  //is not necessary
-            mLastVoiceHeardMillis = Long.MAX_VALUE;
-            mCallback.onVoiceEnd();
         }
+        return false;
+    }
 
-        private int getMBufferSize(){
-            return getMBufferRangeSize(headIndex, tailIndex);
-        }
-
-        private int getMBufferRangeSize(int begin, int end){
-            if(begin <= end){
-                return end - begin;
-            }else{    //(begin > end)
-                return (mBuffer.length-begin) + end;
-            }
-        }
-
-        private boolean isHearingVoice(byte[] buffer, int size) {   //old method to measure threshold (not used)
-            for (int i = 0; i < size - 1; i += 2) {
-                // The buffer has LINEAR16 (2 bytes) in little endian.
-                // Therefore, to take the integer value at position i, we convert the (i+1)-th byte into an integer (positive),
-                // shift it to the left by 8 bits and add to it the absolute integer value of the i-th byte
-                int s = buffer[i + 1];
-                if (s < 0) s *= -1;
-                s <<= 8;
-                s += Math.abs(buffer[i]);
-                //if the value is grater than the threshold the method returns true
-                int amplitudeThreshold = global.getAmplitudeThreshold();
-                if (s > amplitudeThreshold) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private boolean isHearingVoice(float[] buffer, int begin, int end) {
-            // We iterate circlularly the mBuffer from the begin index to the end index, and if one of the values exceed the threshold the method returns true.
+    private boolean isHearingVoice(float[] buffer, int begin, int end) {
+        if(!isManualMode) {
+            // We iterate circularly the mBuffer from the begin index to the end index, and if one of the values exceed the threshold the method returns true.
             // Also The range with the old ENCODING_PCM_16BIT was [-32768, 32767], while now with the new ENCODING_PCM_FLOAT it is [-1, 1],
             // so to convert the values of the new range into those of the old range (the threshold is based on the old values) I have to multiply them by 32767.
             int numberOfThreshold = 15;
             int count = begin;
-            while (count != end){
+            while (count != end) {
                 float s = Math.abs(buffer[count]) * 32767;
                 int amplitudeThreshold = global.getAmplitudeThreshold();
                 if (s > amplitudeThreshold) {
                     numberOfThreshold--;
-                    //return true;
                 }
-                if (count < buffer.length-1){
+                if (count < buffer.length - 1) {
                     count++;
-                }else{
+                } else {
                     count = 0;
                 }
             }
-            if(numberOfThreshold <= 0){
+            if (numberOfThreshold <= 0) {
                 return true;
-            }else{
+            } else {
                 return false;
             }
-            //return false;
+        }else{
+            return true;  //in this way if we are in manual mode the recording will run until we call end()
+        }
+    }
+
+    private void notifyVolumeLevel(float[] buffer, int begin, int end) {
+        if(isRecording){
+            float[] amplifiedBuffer = new float[getMBufferRangeSize(begin, end)];
+
+            //we make a copy of the buffer with every value amplified and converted to an absolute value
+            //so the range of every value from [-1, 1] will become [0, amplification]
+            int count = begin;
+            int linearCount = 0;
+            float amplification = (32767f/global.getAmplitudeThreshold()) * 2;
+            while (count != end) {
+                amplifiedBuffer[linearCount] = (float) (Math.abs(buffer[count]) * amplification);
+                if (count < buffer.length - 1) {
+                    count++;
+                } else {
+                    count = 0;
+                }
+                linearCount++;
+            }
+
+            //we remove the nMinValuesToRemove lower values
+            /*int nMinValuesToRemove = 1;
+            int nMin = 0;
+            while (nMin < nMinValuesToRemove) {
+                float min = Float.MAX_VALUE;
+                int minIndex = 0;
+                for(int i=0; i<amplifiedBuffer.length; i++){
+                    if(amplifiedBuffer[i] < min){
+                        min = amplifiedBuffer[i];
+                        minIndex = i;
+                    }
+                }
+                amplifiedBuffer[minIndex] = 0;    //assign a 0 is equivalent to remove a number because it will not have an effect on the sum (and even on the average because we exclude this number in the number of elements)
+                nMin++;
+            }*/
+
+            //we do the average of every value in amplifiedBuffer
+            float sum = 0;
+            for (int i=0; i<amplifiedBuffer.length; i++) {
+                sum += amplifiedBuffer[i];
+            }
+            float average = sum / (amplifiedBuffer.length /*- nMinValuesToRemove*/);
+
+            //Log.d("volume", "volume: " + average);
+
+            //we cap the values between 0 and 1 (and we decrease the sensitivity in the [0.8, 1] range)
+            if(average > 1){
+                float surplus = average-1f;
+                surplus = surplus / 5;
+                average = 0.8f + surplus;
+            }
+            if(average > 1){
+                average = 1;
+            }
+            if(average < 0){
+                average = 0;
+            }
+
+            //Log.d("volume", "volume capped: " + average);
+
+            mCallback.onVolumeLevel(average);
         }
     }
 
@@ -446,6 +565,12 @@ public class Recorder {
             }
             Log.e("recorder","onVoiceEnd");
         }
+
+        /**
+         * Called continuously when we hear voice
+         * @param volumeLevel a value between [0, 1] that represent the volume percentage of the audio captured by the microphone
+         */
+        public void onVolumeLevel(float volumeLevel){}
     }
 
     public static abstract class SimpleCallback extends Callback {
@@ -456,14 +581,17 @@ public class Recorder {
 
         @Override
         public void onVoiceStart() {
+            super.onVoiceStart();
         }
 
         @Override
         public void onVoice(@NonNull float[] data, int size) {
+            super.onVoice(data, size);
         }
 
         @Override
         public void onVoiceEnd() {
+            super.onVoiceEnd();
         }
     }
 }

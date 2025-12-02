@@ -110,20 +110,20 @@ public class PeerListAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View view, ViewGroup viewGroup) {
+    public View getView(int position, View view, ViewGroup container) {
         final Object item = getItem(position);
         int itemType = getItemViewType(position);
 
         if (itemType == HEADER) {
             String headerText = ((Header) item).getText();
             if (view == null) {
-                view = inflater.inflate(R.layout.component_row_header, null);
+                view = inflater.inflate(R.layout.component_row_header, container, false);
             }
             ((TextView) view.findViewById(R.id.header_text)).setText(headerText);
         } else if (itemType == HOST_CONNECTED) {
             GuiPeer guiPeer = (GuiPeer) item;
             if (view == null) {
-                view = inflater.inflate(R.layout.component_row_connected, null);
+                view = inflater.inflate(R.layout.component_row_connected, container, false);
             }
             Bitmap image = guiPeer.getUserImage();
             if (image != null) {
@@ -145,7 +145,7 @@ public class PeerListAdapter extends BaseAdapter {
             GuiPeer guiPeer= (GuiPeer) item;
             String peerName = ((Peer) item).getName();
             if (view == null) {
-                view = inflater.inflate(R.layout.component_row, null);
+                view = inflater.inflate(R.layout.component_row, container, false);
             }
             Bitmap image = guiPeer.getUserImage();
             if (image != null) {
@@ -161,7 +161,7 @@ public class PeerListAdapter extends BaseAdapter {
             final RecentPeer recentPeer = (RecentPeer) item;
             String peerName = recentPeer.getName();
             if (view == null) {
-                view = inflater.inflate(R.layout.component_row_recent, null);
+                view = inflater.inflate(R.layout.component_row_recent, container, false);
                 // if you don't set it to false then clicking on the whole row won't work
                 ((ImageButton) view.findViewById(R.id.threeDotsButton)).setFocusable(false);
             }
@@ -185,8 +185,19 @@ public class PeerListAdapter extends BaseAdapter {
                 ((TextView) view.findViewById(R.id.path)).setText(R.string.not_available);
             }
             ((TextView) view.findViewById(R.id.textRowRecent)).setText(peerName);
-
         }
+
+        if(view != null) {
+            View divider = view.findViewById(R.id.divider);
+            if(divider != null) {
+                if (position == getCount() - 1) {
+                    divider.setVisibility(View.GONE);
+                } else {
+                    divider.setVisibility(View.VISIBLE);
+                }
+            }
+        }
+
         return view;
     }
 

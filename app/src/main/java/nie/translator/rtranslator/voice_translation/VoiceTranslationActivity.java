@@ -24,6 +24,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -91,6 +92,7 @@ public class VoiceTranslationActivity extends GeneralActivity {
     private Handler mainHandler;  // handler that can be used to post to the main thread
     //variables
     private int connectionId = 1;
+    Configuration config;
 
 
     @Override
@@ -145,6 +147,9 @@ public class VoiceTranslationActivity extends GeneralActivity {
         // when we return to the app's gui based on the service that was saved in the last closure we choose which fragment to start
         SharedPreferences sharedPreferences = this.getSharedPreferences("default", Context.MODE_PRIVATE);
         setFragment(sharedPreferences.getInt("fragment", DEFAULT_FRAGMENT));
+        if(getResources() != null) {
+            config = getResources().getConfiguration();
+        }
     }
 
     @Override
@@ -162,7 +167,7 @@ public class VoiceTranslationActivity extends GeneralActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        //getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
     }
 
@@ -292,6 +297,23 @@ public class VoiceTranslationActivity extends GeneralActivity {
             }
         }
         return -1;
+    }
+
+    @Override
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (currentFragment == TRANSLATION_FRAGMENT || currentFragment == CONVERSATION_FRAGMENT) {
+            /* We recreate the activity only for TRANSLATION_FRAGMENT and CONVERSATION_FRAGMENT because if we do not do this,
+            the keyboard sometimes not go in full screen when the screen has too little space */
+            if(config == null) {
+                recreate();
+            }else if(config.orientation != newConfig.orientation){
+                recreate();
+            }
+        }
+        if(getResources() != null) {
+            config = getResources().getConfiguration();
+        }
     }
 
     public int startSearch() {
@@ -429,14 +451,7 @@ public class VoiceTranslationActivity extends GeneralActivity {
                     showConfirmExitDialog(confirmExitListener);
                 }
             } else if (fragment instanceof WalkieTalkieFragment) {
-                WalkieTalkieFragment walkieTalkieFragment = (WalkieTalkieFragment) fragment;
-                if (walkieTalkieFragment.isInputActive()) {
-                    if (walkieTalkieFragment.isEditTextOpen()) {
-                        walkieTalkieFragment.deleteEditText();
-                    } else {
-                        setFragment(DEFAULT_FRAGMENT);
-                    }
-                }
+                setFragment(DEFAULT_FRAGMENT);
             } else if (fragment instanceof PairingFragment) {
                 setFragment(DEFAULT_FRAGMENT);
             }else{
@@ -468,7 +483,7 @@ public class VoiceTranslationActivity extends GeneralActivity {
                 if(NotificationManagerCompat.from(VoiceTranslationActivity.this).areNotificationsEnabled()) {
                     intent.putExtra("notification", notification);
                 }else{
-                    Toast.makeText(VoiceTranslationActivity.this, getResources().getString(R.string.toast_missing_notification_permission), Toast.LENGTH_LONG).show();
+                    //Toast.makeText(VoiceTranslationActivity.this, getResources().getString(R.string.toast_missing_notification_permission), Toast.LENGTH_LONG).show();
                 }
                 startService(intent);
                 responseListener.onSuccess();
@@ -496,7 +511,7 @@ public class VoiceTranslationActivity extends GeneralActivity {
                         if(NotificationManagerCompat.from(VoiceTranslationActivity.this).areNotificationsEnabled()) {
                             intent.putExtra("notification", notification);
                         }else{
-                            Toast.makeText(VoiceTranslationActivity.this, getResources().getString(R.string.toast_missing_notification_permission), Toast.LENGTH_LONG).show();
+                            //Toast.makeText(VoiceTranslationActivity.this, getResources().getString(R.string.toast_missing_notification_permission), Toast.LENGTH_LONG).show();
                         }
                         startService(intent);
                         responseListener.onSuccess();
@@ -605,16 +620,16 @@ public class VoiceTranslationActivity extends GeneralActivity {
         // creation of the notification
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelID);
         if (clickAction == CONVERSATION_FRAGMENT) {
-            builder.setContentTitle("Conversation")
-                    .setContentText("Conversation mode is running...")
+            builder.setContentTitle(getString(R.string.title_fragment_conversation))
+                    .setContentText(getString(R.string.conversation_mode_running))
                     .setContentIntent(resultPendingIntent)
                     .setSmallIcon(R.drawable.mic_icon)
                     .setOngoing(true)
                     .setChannelId(channelID)
                     .build();
         } else {
-            builder.setContentTitle("WalkieTalkie")
-                    .setContentText("WalkieTalkie mode is running...")
+            builder.setContentTitle(getString(R.string.title_fragment_walkie_talkie))
+                    .setContentText(getString(R.string.walkietalkie_mode_running))
                     .setContentIntent(resultPendingIntent)
                     .setSmallIcon(R.drawable.mic_icon)
                     .setOngoing(true)

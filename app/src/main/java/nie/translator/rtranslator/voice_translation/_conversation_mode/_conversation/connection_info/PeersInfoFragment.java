@@ -144,7 +144,7 @@ public class PeersInfoFragment extends Fragment {
                         activateInputs();
                         connectingPeer = null;
                         if (errorCode == BluetoothCommunicator.CONNECTION_REJECTED) {
-                            Toast.makeText(activity, peer.getName() + getResources().getString(R.string.error_connection_rejected), Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, peer.getName() + " " + getResources().getString(R.string.error_connection_rejected), Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(activity, getResources().getString(R.string.error_connection), Toast.LENGTH_SHORT).show();
                         }

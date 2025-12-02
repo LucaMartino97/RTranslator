@@ -28,20 +28,17 @@ import javax.annotation.Nullable;
 public class DeactivableButton extends AppCompatImageButton {
     public static final int ACTIVATED=0;
     public static final int DEACTIVATED=1;
-    public static final int DEACTIVATED_FOR_CREDIT_EXHAUSTED =2;
     public static final int DEACTIVATED_FOR_MISSING_MIC_PERMISSION =3;
-    public static final int DEACTIVATED_FOR_MISSING_OR_WRONG_KEYFILE =4;
     public static final int DEACTIVATED_FOR_TTS_ERROR=5;
     protected int activationStatus=0;
     private OnClickListener activatedClickListener;
     private OnClickListener deactivatedClickListener;
-    private OnClickListener deactivatedForCreditExhaustedClickListener;
     private OnClickListener deactivatedForMissingMicPermissionClickListener;
-    private OnClickListener deactivatedForMissingOrWrongKeyfileClickListener;
     private OnClickListener deactivatedForTTSErrorClickListener;
-    public static ColorStateList deactivatedColor;
-    public static ColorStateList activatedColor;
-    protected ColorStateList color;
+    public boolean activated = true;
+    //public static ColorStateList deactivatedColor;
+    //public static ColorStateList activatedColor;
+    //protected ColorStateList color;
 
     public DeactivableButton(Context context) {
         super(context);
@@ -69,23 +66,9 @@ public class DeactivableButton extends AppCompatImageButton {
         }
     }
 
-    public void setOnClickListenerForDeactivatedForCreditExhausted(@Nullable OnClickListener l) {
-        deactivatedForCreditExhaustedClickListener =l;
-        if(activationStatus== DEACTIVATED_FOR_CREDIT_EXHAUSTED) {
-            super.setOnClickListener(l);
-        }
-    }
-
     public void setOnClickListenerForDeactivatedForMissingMicPermission(@Nullable OnClickListener l) {
         deactivatedForMissingMicPermissionClickListener =l;
         if(activationStatus== DEACTIVATED_FOR_MISSING_MIC_PERMISSION) {
-            super.setOnClickListener(l);
-        }
-    }
-
-    public void setOnClickListenerForDeactivatedForMissingOrWrongKeyfile(@Nullable OnClickListener l) {
-        deactivatedForMissingOrWrongKeyfileClickListener =l;
-        if(activationStatus== DEACTIVATED_FOR_MISSING_OR_WRONG_KEYFILE) {
             super.setOnClickListener(l);
         }
     }
@@ -99,21 +82,14 @@ public class DeactivableButton extends AppCompatImageButton {
 
     public void deactivate(int reason){
         activationStatus=reason;
+        activated = false;
         switch (reason){
             case DEACTIVATED:{
                 super.setOnClickListener(deactivatedClickListener);
                 break;
             }
-            case DEACTIVATED_FOR_CREDIT_EXHAUSTED:{
-                super.setOnClickListener(deactivatedForCreditExhaustedClickListener);
-                break;
-            }
             case DEACTIVATED_FOR_MISSING_MIC_PERMISSION:{
                 super.setOnClickListener(deactivatedForMissingMicPermissionClickListener);
-                break;
-            }
-            case DEACTIVATED_FOR_MISSING_OR_WRONG_KEYFILE:{
-                super.setOnClickListener(deactivatedForMissingOrWrongKeyfileClickListener);
                 break;
             }
             case DEACTIVATED_FOR_TTS_ERROR: {
@@ -126,10 +102,14 @@ public class DeactivableButton extends AppCompatImageButton {
     public void activate(boolean start){
         if(activationStatus != DEACTIVATED_FOR_TTS_ERROR) {
             activationStatus = ACTIVATED;
+            activated = true;
             super.setOnClickListener(activatedClickListener);
         }
     }
 
+    public boolean isActivated(){
+        return activated;
+    }
 
     public int getActivationStatus() {
         return activationStatus;

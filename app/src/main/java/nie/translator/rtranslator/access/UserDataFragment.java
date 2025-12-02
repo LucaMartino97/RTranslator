@@ -26,13 +26,14 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
-import com.gallery.imageselector.GalleryImageSelector;
+import nie.translator.rtranslator.tools.GalleryImageSelector;
 import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public class UserDataFragment extends Fragment {
     private AccessActivity activity;
     private Global global;
     private GalleryImageSelector userImageContainer;
+    private Button buttonSelectTTS;
+    private TextView ttsDescription;
 
 
     public UserDataFragment() {
@@ -75,6 +78,9 @@ public class UserDataFragment extends Fragment {
         //this.ageTerms = view.findViewById(R.id.checkBoxAge);
         this.privacyTerms = view.findViewById(R.id.checkBoxPrivacy);
         this.privacyTerms.setMovementMethod(LinkMovementMethod.getInstance());
+        buttonSelectTTS = view.findViewById(R.id.buttonChangeTTS);
+        ttsDescription = view.findViewById(R.id.ttsDescription);
+        ttsDescription.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     @Override
@@ -83,6 +89,16 @@ public class UserDataFragment extends Fragment {
         activity = (AccessActivity) requireActivity();
         global = (Global) activity.getApplication();
         userImageContainer = new GalleryImageSelector(imageView, activity, this, R.drawable.user_icon, "com.gallery.RTranslator.2.0.provider");
+
+        buttonSelectTTS.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setAction("com.android.settings.TTS_SETTINGS");
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                activity.startActivity(intent);
+            }
+        });
 
         buttonConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,7 +111,7 @@ public class UserDataFragment extends Fragment {
                     error = true;
                     inputNameLayout.setError(getResources().getString(R.string.error_missing_username));
                 } else {
-                    //compatibily check for supported characters
+                    //compatibility check for supported characters
                     ArrayList<Character> supportedCharacters = BluetoothTools.getSupportedUTFCharacters(global);
                     boolean equals = true;
                     for (int i = 0; i < name.length() && equals; i++) {

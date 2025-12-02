@@ -24,7 +24,7 @@ import android.os.Looper;
 import nie.translator.rtranslator.bluetooth.BluetoothCommunicator;
 import nie.translator.rtranslator.bluetooth.Message;
 import nie.translator.rtranslator.bluetooth.Peer;
-import com.gallery.imageselector.GalleryImageSelector;
+import nie.translator.rtranslator.tools.GalleryImageSelector;
 
 import java.util.ArrayList;
 

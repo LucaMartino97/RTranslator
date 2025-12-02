@@ -16,26 +16,32 @@
 
 package nie.translator.rtranslator.voice_translation._conversation_mode._conversation;
 
+import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toolbar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.tabs.TabLayout;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import nie.translator.rtranslator.R;
+import nie.translator.rtranslator.settings.SettingsActivity;
 import nie.translator.rtranslator.tools.gui.CustomFragmentPagerAdapter;
 import nie.translator.rtranslator.tools.gui.animations.CustomAnimator;
 import nie.translator.rtranslator.voice_translation.VoiceTranslationActivity;
@@ -46,8 +52,12 @@ import nie.translator.rtranslator.voice_translation._conversation_mode._conversa
 
 public class ConversationFragment extends PairingToolbarFragment {
     private ConstraintLayout constraintLayout;
-    private ImageButton exitButton;
-    private TabLayout tabLayout;
+    private AppCompatImageButton exitButton;
+    private AppCompatImageButton settingsButton;
+    private MaterialCardView tabConversationContainer;
+    private TextView tabConversationTitle;
+    private MaterialCardView tabConnectionContainer;
+    private TextView tabConnectionTitle;
     private ViewPager pager;
     private CustomFragmentPagerAdapter pagerAdapter;
     private VoiceTranslationActivity.Callback communicatorCallback;
@@ -89,7 +99,11 @@ public class ConversationFragment extends PairingToolbarFragment {
         super.onViewCreated(view, savedInstanceState);
         constraintLayout = view.findViewById(R.id.container);
         exitButton = view.findViewById(R.id.exitButton);
-        tabLayout = view.findViewById(R.id.tabsLayout);
+        settingsButton = view.findViewById(R.id.settingsButton);
+        tabConversationContainer = view.findViewById(R.id.tabConversationContainer);
+        tabConversationTitle = view.findViewById(R.id.tabConversationName);
+        tabConnectionContainer = view.findViewById(R.id.tabConnectionContainer);
+        tabConnectionTitle = view.findViewById(R.id.tabConnectionName);
         pager = view.findViewById(R.id.tabs);
     }
 
@@ -115,15 +129,19 @@ public class ConversationFragment extends PairingToolbarFragment {
         pager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
             public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
-                if (position == 0 && positionOffset == 0 && pagerPosition == 1) {
+                //using positionComplete instead of position to identify the selected page we will start the animations when a view surpass the middle of the screen during scrolling
+                float positionComplete = position + positionOffset;
+                if (positionComplete <= 0.5 && pagerPosition == 1) {
                     pagerPosition = 0;
+                    animator.animateTabSelection(activity, tabConversationContainer, tabConversationTitle, tabConnectionContainer, tabConnectionTitle, 0);
                     if(global.getBluetoothCommunicator() != null) {
                         global.getBluetoothCommunicator().removeCallback(communicatorCallback);
                     }
                     ((PeersInfoFragment) pagerAdapter.getFragment(1)).onDeselected();
                     buttonSearch.setVisible(false,null);
-                } else if (position == 1 && positionOffset == 0 && pagerPosition == 0) {
+                } else if (positionComplete >= 0.5 && pagerPosition == 0) {
                     pagerPosition = 1;
+                    animator.animateTabSelection(activity, tabConversationContainer, tabConversationTitle, tabConnectionContainer, tabConnectionTitle, 1);
                     if(global.getBluetoothCommunicator() != null) {
                         global.getBluetoothCommunicator().addCallback(communicatorCallback);
                     }
@@ -143,11 +161,36 @@ public class ConversationFragment extends PairingToolbarFragment {
             }
         });
 
-        tabLayout.setupWithViewPager(pager);
         exitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 activity.onBackPressed();
+            }
+        });
+
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(activity, SettingsActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+            }
+        });
+
+        tabConversationContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(pager.getCurrentItem() != 0){
+                    pager.setCurrentItem(0, true);
+                }
+            }
+        });
+        tabConnectionContainer.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(pager.getCurrentItem() != 1){
+                    pager.setCurrentItem(1, true);
+                }
             }
         });
     }

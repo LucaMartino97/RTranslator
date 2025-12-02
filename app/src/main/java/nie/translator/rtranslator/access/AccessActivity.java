@@ -19,6 +19,7 @@ package nie.translator.rtranslator.access;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -37,6 +38,10 @@ public class AccessActivity extends GeneralActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_access);
+
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+
         if (savedInstanceState != null) {
             //Restore the fragment's instance
             fragment = getSupportFragmentManager().getFragment(savedInstanceState, "fragment_inizialization");
@@ -53,11 +58,11 @@ public class AccessActivity extends GeneralActivity {
 
     @Override
     protected void onStart() {
-        super.onStart();
         Global global = (Global) getApplication();
         if(global != null){
             global.setAccessActivity(this);
         }
+        super.onStart();  //called here because otherwise the onStart of the DownloadFragment is called before this onStart, and this could cause problems.
     }
 
     @Override
