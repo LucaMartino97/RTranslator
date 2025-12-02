@@ -76,6 +76,7 @@ public class WalkieTalkieService extends VoiceTranslationService {
     @Override
     public void onCreate() {
         super.onCreate();
+        isMicAutomatic = false;
         translator = ((Global) getApplication()).getTranslator();
         speechRecognizer = ((Global) getApplication()).getSpeechRecognizer();
         clientHandler = new Handler(new Handler.Callback() {
@@ -381,6 +382,7 @@ public class WalkieTalkieService extends VoiceTranslationService {
         if (Tools.hasPermissions(this, REQUIRED_PERMISSIONS)) {
             //voice recorder initialization
             super.mVoiceRecorder = new Recorder((Global) getApplication(), false, mVoiceCallback, null);
+            mVoiceRecorder.setManualMode(true);
         }
     }
 

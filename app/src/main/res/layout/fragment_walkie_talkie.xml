@@ -473,7 +473,7 @@
                                 android:background="@drawable/circle"
                                 android:backgroundTint="@color/primary"
                                 android:src="@drawable/mic_icon"
-                                android:visibility="gone"
+                                android:visibility="invisible"
                                 app:tint="@color/accent_white"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintEnd_toEndOf="parent"
@@ -532,7 +532,7 @@
                             android:scrollHorizontally="true"
                             android:text="@string/automatic"
                             android:textSize="12sp"
-                            android:visibility="gone" />
+                            android:visibility="invisible" />
                     </LinearLayout>
 
                     <ImageButton
