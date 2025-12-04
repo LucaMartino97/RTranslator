@@ -29,8 +29,8 @@ android {
     defaultConfig {
         applicationId "nie.translator.rtranslator"
         targetSdkVersion 32   //32
-        versionCode 24
-        versionName '2.1.4'
+        versionCode 25
+        versionName '2.1.5'
         minSdkVersion 24
         externalNativeBuild {
             cmake {
